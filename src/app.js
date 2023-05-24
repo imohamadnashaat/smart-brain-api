@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import cors from 'cors';
 
 const app = express();
 
@@ -24,6 +25,7 @@ const database = {
   ],
 };
 
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
