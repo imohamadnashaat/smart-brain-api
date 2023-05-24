@@ -1,4 +1,5 @@
 import express from 'express';
+import bcrypt from 'bcryptjs';
 
 const app = express();
 
@@ -8,7 +9,7 @@ const database = {
       id: 123,
       name: 'Mohamad',
       email: 'mohamad@test.com',
-      password: '123',
+      password: '$2a$10$dAQLKJmJCXfkpoU6NSpJoujUtPMQtrqeBK3aez0/vUj/IydQLGm6.',
       entries: 0,
       joined: new Date(),
     },
@@ -16,7 +17,7 @@ const database = {
       id: 1234,
       name: 'Mary',
       email: 'mary@test.com',
-      password: '1234',
+      password: '$2a$10$K6tfH6iUiCiWwMqEI6YR7utTpJoMh89vBngOi1AaQjXyNo.ZL/.5O',
       entries: 0,
       joined: new Date(),
     },
@@ -30,27 +31,39 @@ app.get('/', (req, res) => {
   res.json({ sucess: 'ok' });
 });
 
-app.post('/signin', (req, res) => {
-  const { email, password } = req.body;
-  const user = database.users.find((user) => {
-    return user.email === email && user.password === password;
-  });
-  user
-    ? res.status(200).json('success')
-    : res.status(404).json('Login failed; Invalid email or password');
-});
-
 app.use('/register', (req, res) => {
   const { name, email, password } = req.body;
+  // Hash the password before save it
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(password, salt);
+  // Save user
   database.users.push({
     id: 12345,
     name,
     email,
-    password,
+    password: hash,
     entries: 0,
     joined: new Date(),
   });
   res.json(database.users.at(-1));
+});
+
+app.post('/signin', (req, res) => {
+  const { email, password } = req.body;
+  // Check email
+  const user = database.users.find((user) => user.email === email);
+  if (user) {
+    // Check password
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (result) {
+        res.status(200).json('success');
+      } else {
+        res.status(404).json('Login failed; Invalid email or password');
+      }
+    });
+  } else {
+    res.status(404).json('Login failed; Invalid email or password');
+  }
 });
 
 app.get('/profile/:id', (req, res) => {
