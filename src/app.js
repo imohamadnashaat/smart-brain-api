@@ -77,4 +77,17 @@ app.get('/profile/:id', (req, res) => {
     : res.status(404).json(`Profile with id ${id} does not exist!`);
 });
 
+app.put('/image', (req, res) => {
+  const { id } = req.body;
+  const user = database.users.find((user) => Number(user.id) === Number(id));
+  if (user) {
+    // Update entries by one
+    const index = database.users.findIndex((item) => item.id === user.id);
+    database.users.at(index).entries++;
+    res.json({ user });
+  } else {
+    res.status(404).json('User does not exist!');
+  }
+});
+
 export default app;
