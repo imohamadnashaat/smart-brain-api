@@ -38,16 +38,17 @@ app.use('/register', (req, res) => {
   // Hash the password before save it
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
-  // Save user
-  database.users.push({
+  const user = {
     id: 12345,
     name,
     email,
     password: hash,
     entries: 0,
     joined: new Date(),
-  });
-  res.json(database.users.at(-1));
+  };
+  // Save user
+  database.users.push(user);
+  res.json(user);
 });
 
 app.post('/signin', (req, res) => {
@@ -58,7 +59,7 @@ app.post('/signin', (req, res) => {
     // Check password
     bcrypt.compare(password, user.password, (err, result) => {
       if (result) {
-        res.status(200).json('success');
+        res.status(200).json(user);
       } else {
         res.status(404).json('Login failed; Invalid email or password');
       }
