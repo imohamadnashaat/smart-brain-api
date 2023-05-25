@@ -84,7 +84,7 @@ app.put('/image', (req, res) => {
     // Update entries by one
     const index = database.users.findIndex((item) => item.id === user.id);
     database.users.at(index).entries++;
-    res.json({ user });
+    res.json(database.users.at(index));
   } else {
     res.status(404).json('User does not exist!');
   }
