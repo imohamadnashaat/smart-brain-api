@@ -1,29 +1,15 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
+import knex from 'knex';
 
 const app = express();
 
-const database = {
-  users: [
-    {
-      id: 123,
-      name: 'Mohamad',
-      email: 'mohamad@test.com',
-      password: '$2a$10$dAQLKJmJCXfkpoU6NSpJoujUtPMQtrqeBK3aez0/vUj/IydQLGm6.',
-      entries: 0,
-      joined: new Date(),
-    },
-    {
-      id: 1234,
-      name: 'Mary',
-      email: 'mary@test.com',
-      password: '$2a$10$K6tfH6iUiCiWwMqEI6YR7utTpJoMh89vBngOi1AaQjXyNo.ZL/.5O',
-      entries: 0,
-      joined: new Date(),
-    },
-  ],
-};
+const dbConfig = JSON.parse(process.env.PG_CONNECTION_STRING);
+const db = knex({
+  client: 'pg',
+  connection: dbConfig,
+});
 
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
@@ -33,61 +19,88 @@ app.get('/', (req, res) => {
   res.json({ sucess: 'ok' });
 });
 
-app.use('/register', (req, res) => {
+app.post('/register', (req, res) => {
   const { name, email, password } = req.body;
-  // Hash the password before save it
+  // Hash the password
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
-  const user = {
-    id: 12345,
-    name,
-    email,
-    password: hash,
-    entries: 0,
-    joined: new Date(),
-  };
-  // Save user
-  database.users.push(user);
-  res.json(user);
+  // Save user to database
+  db.transaction((trx) => {
+    trx
+      .insert({ hash: hash, email: email })
+      .into('login')
+      .returning('email')
+      .then((loginEmail) => {
+        return trx('users')
+          .returning('*')
+          .insert({
+            name: name,
+            email: loginEmail[0].email,
+            joined: new Date(),
+          })
+          .then((user) => res.status(201).json(user[0]));
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
+  }).catch((err) => res.status(400).json('Unable to register'));
 });
 
 app.post('/signin', (req, res) => {
   const { email, password } = req.body;
-  // Check email
-  const user = database.users.find((user) => user.email === email);
-  if (user) {
-    // Check password
-    bcrypt.compare(password, user.password, (err, result) => {
-      if (result) {
-        res.status(200).json(user);
+  db.select('email', 'hash')
+    .from('login')
+    .where('email', '=', email)
+    .then((data) => {
+      const isValid = bcrypt.compareSync(password, data[0].hash);
+      if (isValid) {
+        return db
+          .select('*')
+          .from('users')
+          .where('email', '=', email)
+          .then((user) => {
+            res.status(200).json(user[0]);
+          })
+          .catch((err) => res.status(400).json('Unable to get user'));
       } else {
-        res.status(404).json('Login failed; Invalid email or password');
+        res.status(400).json('Login failed; Invalid email or password');
       }
-    });
-  } else {
-    res.status(404).json('Login failed; Invalid email or password');
-  }
+    })
+    .catch((err) =>
+      res.status(400).json('Login failed; Invalid email or password')
+    );
 });
 
 app.get('/profile/:id', (req, res) => {
   const { id } = req.params;
-  const user = database.users.find((user) => Number(user.id) === Number(id));
-  user
-    ? res.status(200).json(user)
-    : res.status(404).json(`Profile with id ${id} does not exist!`);
+  db.select('*')
+    .from('users')
+    .where({
+      id,
+    })
+    .then((user) => {
+      if (user.length) {
+        res.status(200).json(user[0]);
+      } else {
+        res.status(400).json('Not found');
+      }
+    })
+    .catch((err) => res.status(400).json('Error geting profile'));
 });
 
 app.put('/image', (req, res) => {
   const { id } = req.body;
-  const user = database.users.find((user) => Number(user.id) === Number(id));
-  if (user) {
-    // Update entries by one
-    const index = database.users.findIndex((item) => item.id === user.id);
-    database.users.at(index).entries++;
-    res.json(database.users.at(index));
-  } else {
-    res.status(404).json('User does not exist!');
-  }
+  db('users')
+    .returning('*')
+    .where('id', '=', id)
+    .increment('entries', 1)
+    .then((user) => {
+      if (user.length) {
+        res.status(200).json(user);
+      } else {
+        res.status(400).json('Not found');
+      }
+    })
+    .catch((err) => res.status(400).json('Error updating entries'));
 });
 
 app.post('/clarifaiImage', (req, res) => {
