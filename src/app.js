@@ -95,7 +95,7 @@ app.put('/image', (req, res) => {
     .increment('entries', 1)
     .then((user) => {
       if (user.length) {
-        res.status(200).json(user);
+        res.status(200).json(user[0]);
       } else {
         res.status(400).json('Not found');
       }
