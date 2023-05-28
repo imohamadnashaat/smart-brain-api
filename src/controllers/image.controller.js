@@ -1,17 +1,31 @@
-const handleImageGet = (db) => (req, res) => {
-  const { id } = req.body;
-  db('users')
-    .returning('*')
-    .where('id', '=', id)
-    .increment('entries', 1)
-    .then((user) => {
-      if (user.length) {
-        res.status(200).json(user[0]);
-      } else {
-        res.status(400).json('Not found');
-      }
-    })
-    .catch((err) => res.status(400).json('Error updating entries'));
+import Joi from 'joi';
+
+const imageIdSchema = Joi.object({
+  id: Joi.number().integer().required(),
+});
+
+const handleImageGet = (db) => async (req, res) => {
+  try {
+    const { error } = imageIdSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { id } = req.body;
+
+    const [user] = await db('users')
+      .returning('*')
+      .where('id', '=', id)
+      .increment('entries', 1);
+
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(404).json('Not found');
+    }
+  } catch (err) {
+    res.status(400).json('Error updating entries');
+  }
 };
 
 export { handleImageGet };
