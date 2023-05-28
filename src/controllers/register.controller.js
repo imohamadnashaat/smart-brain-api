@@ -21,18 +21,19 @@ const handleRegister = (db, bcrypt) => async (req, res) => {
 
     // Save user to database using a transaction
     await db.transaction(async (trx) => {
-      const loginEmail = await trx
+      const login = await trx
         .insert({ hash: hash, email: email })
         .into('login')
         .returning('email');
 
       const user = await trx('users').returning('*').insert({
         name: name,
-        email: loginEmail[0].email,
+        email: login[0].email,
         joined: new Date(),
       });
 
-      trx.commit();
+      await trx.commit();
+
       res.status(201).json(user[0]);
     });
   } catch (err) {
