@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 const handleClarifaiImagePost = async (req, res) => {
   try {
     const { imageUrl } = req.body;
