@@ -8,6 +8,7 @@ import { handleSignin } from './controllers/signin.controller.js';
 import { handleProfileGet } from './controllers/profile.controller.js';
 import { handleImageGet } from './controllers/image.controller.js';
 import { handleClarifaiImagePost } from './controllers/clarifai.controller.js';
+import { handleUsersGet } from './controllers/users.controller.js';
 
 const app = express();
 
@@ -24,10 +25,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.get('/', (req, res) => res.json({ sucess: 'ok' }));
-app.get('/users', async (req, res) => {
-  const users = await db.select('*').from('users');
-  res.json(users);
-});
+app.get('/users', handleUsersGet(db));
 app.post('/register', handleRegister(db, bcrypt));
 app.post('/signin', handleSignin(db, bcrypt));
 app.get('/profile/:id', handleProfileGet(db));
