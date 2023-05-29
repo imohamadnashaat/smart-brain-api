@@ -11,10 +11,12 @@ import { handleClarifaiImagePost } from './controllers/clarifai.controller.js';
 
 const app = express();
 
-const dbConfig = JSON.parse(process.env.PG_CONNECTION_STRING);
 const db = knex({
   client: 'pg',
-  connection: dbConfig,
+  connection: {
+    connectionString: process.env.PG_CONNECTION_STRING,
+    ssl: true,
+  },
 });
 
 app.use(cors());
@@ -22,6 +24,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.get('/', (req, res) => res.json({ sucess: 'ok' }));
+app.get('/users', async (req, res) => {
+  const users = await db.select('*').from('users');
+  res.json(users);
+});
 app.post('/register', handleRegister(db, bcrypt));
 app.post('/signin', handleSignin(db, bcrypt));
 app.get('/profile/:id', handleProfileGet(db));
