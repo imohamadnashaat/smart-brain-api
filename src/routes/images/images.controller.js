@@ -1,6 +1,36 @@
 import fetch from 'node-fetch';
+import Joi from 'joi';
+import db from '../../services/db.js';
 
-const handleClarifaiImagePost = async (req, res) => {
+const imageIdSchema = Joi.object({
+  id: Joi.number().integer().required(),
+});
+
+const handleImagesPut = async (req, res) => {
+  try {
+    const { error } = imageIdSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { id } = req.body;
+
+    const [user] = await db('users')
+      .returning('*')
+      .where('id', '=', id)
+      .increment('entries', 1);
+
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(404).json('Not found');
+    }
+  } catch (err) {
+    res.status(400).json('Error updating entries');
+  }
+};
+
+const handleImagesPost = async (req, res) => {
   try {
     const { imageUrl } = req.body;
     const MODEL_ID = 'face-detection';
@@ -48,4 +78,4 @@ const handleClarifaiImagePost = async (req, res) => {
   }
 };
 
-export { handleClarifaiImagePost };
+export { handleImagesPut, handleImagesPost };

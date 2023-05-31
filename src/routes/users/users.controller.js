@@ -1,12 +1,22 @@
 import Joi from 'joi';
+import db from '../../services/db.js';
 
-const profileIdSchema = Joi.object({
+const userIdSchema = Joi.object({
   id: Joi.number().integer().required(),
 });
 
-const handleProfileGet = (db) => async (req, res) => {
+const handleUsersGet = async (req, res) => {
   try {
-    const { error } = profileIdSchema.validate(req.params);
+    const users = await db.select('*').from('users');
+    return res.json(users);
+  } catch (err) {
+    res.status(400).json('Error getting users');
+  }
+};
+
+const handleUsersByIdGet = async (req, res) => {
+  try {
+    const { error } = userIdSchema.validate(req.params);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
@@ -29,4 +39,4 @@ const handleProfileGet = (db) => async (req, res) => {
   }
 };
 
-export { handleProfileGet };
+export { handleUsersGet, handleUsersByIdGet };
