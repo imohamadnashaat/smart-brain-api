@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { handleRegister, handleSignin } from './auth.controller.js';
+import { httpRegister, httpSignin } from './auth.controller.js';
 
 const authRouter = new Router();
 
-authRouter.post('/register', handleRegister);
-authRouter.post('/signin', handleSignin);
+authRouter.post('/register', httpRegister);
+authRouter.post('/signin', httpSignin);
 
 export default authRouter;
