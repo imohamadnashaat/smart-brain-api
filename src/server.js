@@ -1,8 +1,6 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import http from 'http';
 import app from './app.js';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);

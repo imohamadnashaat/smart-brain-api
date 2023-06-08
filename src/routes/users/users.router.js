@@ -1,9 +1,16 @@
 import { Router } from 'express';
-import { handleUsersGet, handleUsersByIdGet } from './users.controller.js';
+
+import {
+  httpGetUsersById,
+  httpUpdateUser,
+  httpDeleteUser,
+} from './users.controller.js';
+import { checkUserId } from '../../middlewares/users.middleware.js';
 
 const usersRouter = new Router();
 
-usersRouter.get('/', handleUsersGet);
-usersRouter.get('/:id', handleUsersByIdGet);
+usersRouter.get('/:id', httpGetUsersById);
+usersRouter.put('/:id', httpUpdateUser);
+usersRouter.delete('/:id', httpDeleteUser);
 
 export default usersRouter;

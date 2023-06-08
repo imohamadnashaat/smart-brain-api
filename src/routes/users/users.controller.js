@@ -1,42 +1,55 @@
-import Joi from 'joi';
-import db from '../../services/db.js';
+import {
+  getUserById,
+  updateUser,
+  deleteUser,
+} from '../../models/users.model.js';
 
-const userIdSchema = Joi.object({
-  id: Joi.number().integer().required(),
-});
-
-const handleUsersGet = async (req, res) => {
+const httpGetUsersById = async (req, res) => {
   try {
-    const users = await db.select('*').from('users');
-    return res.json(users);
-  } catch (err) {
-    res.status(400).json('Error getting users');
-  }
-};
-
-const handleUsersByIdGet = async (req, res) => {
-  try {
-    const { error } = userIdSchema.validate(req.params);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
     const { id } = req.params;
-
-    const user = await db
-      .select('*')
-      .from('users')
-      .where('id', '=', id)
-      .first();
+    const user = await getUserById(id);
 
     if (user) {
       res.status(200).json(user);
     } else {
-      res.status(404).json('Not found');
+      res.status(404).json({ message: 'User not found' });
     }
-  } catch (err) {
-    res.status(400).json('Error getting profile');
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving user' });
   }
 };
 
-export { handleUsersGet, handleUsersByIdGet };
+const httpUpdateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email } = req.body;
+
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const updatedUser = await updateUser(id, name, email);
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user' });
+  }
+};
+
+const httpDeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const deletedUser = await deleteUser(id);
+    res.status(200).json(deletedUser);
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+};
+
+export { httpGetUsersById, httpUpdateUser, httpDeleteUser };
