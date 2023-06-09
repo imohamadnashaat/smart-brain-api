@@ -9,8 +9,8 @@ import { checkUserId } from '../../middlewares/users.middleware.js';
 
 const usersRouter = new Router();
 
-usersRouter.get('/:id', httpGetUsersById);
-usersRouter.put('/:id', httpUpdateUser);
-usersRouter.delete('/:id', httpDeleteUser);
+usersRouter.get('/:id', checkUserId, httpGetUsersById);
+usersRouter.put('/:id', checkUserId, httpUpdateUser);
+usersRouter.delete('/:id', checkUserId, httpDeleteUser);
 
 export default usersRouter;

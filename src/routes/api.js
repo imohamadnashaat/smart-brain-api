@@ -8,7 +8,7 @@ import imagesRouter from './images/images.router.js';
 const api = new Router();
 
 api.use('/auth', authRouter);
-api.use('/users', usersRouter);
+api.use('/users', verifyTokenMiddleware, usersRouter);
 api.use('/images', imagesRouter);
 api.get('/protected', verifyTokenMiddleware, (req, res) => {
   res.status(200).json({ message: 'ok' });
