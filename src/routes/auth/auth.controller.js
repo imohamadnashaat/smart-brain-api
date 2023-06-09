@@ -17,11 +17,12 @@ const register = async (req, res) => {
   try {
     const { error } = registerSchema.validate(req.body);
     if (error) {
-      throw new Error(error.details[0].message);
+      return res.status(400).json({
+        message: error.details[0].message,
+      });
     }
 
     const userExists = await getUserByEmail(email);
-
     if (userExists) {
       return res.status(400).json({
         message: 'Unable to register with this email.',

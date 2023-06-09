@@ -7,6 +7,10 @@ import {
 
 const createUser = async (name, email, hash) => {
   const login = await createLoginByEmail(email, hash);
+  if (!login) {
+    throw new Error();
+  }
+
   const user = await db('users').insert({ name, email }).returning('*');
   return user[0];
 };
@@ -23,7 +27,12 @@ const getUserByEmail = async (email) => {
 
 const updateUser = async (id, name, email) => {
   const user = await getUserById(id);
-  await updateLoginByEmail(user.email, email);
+
+  const login = await updateLoginByEmail(user.email, email);
+  if (!login) {
+    throw new Error();
+  }
+
   const result = await db('users')
     .where('id', id)
     .update({ name, email })
@@ -33,7 +42,12 @@ const updateUser = async (id, name, email) => {
 
 const deleteUser = async (id) => {
   const user = await getUserById(id);
-  await deleteLoginByEmail(user.email);
+
+  const login = await deleteLoginByEmail(user.email);
+  if (!login) {
+    throw new Error();
+  }
+
   const result = await db('users').where('id', id).del().returning('*');
   return result[0];
 };

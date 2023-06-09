@@ -1,8 +1,8 @@
 import db from '../services/db.js';
 
 const createLoginByEmail = async (email, hash) => {
-  const login = await db('login').insert({ email, hash }).returning('*');
-  return login[0];
+  const result = await db('login').insert({ email, hash }).returning('*');
+  return result[0];
 };
 
 const updateLoginByEmail = async (email, newEmail) => {
@@ -14,7 +14,8 @@ const updateLoginByEmail = async (email, newEmail) => {
 };
 
 const deleteLoginByEmail = async (email) => {
-  await db('login').where('email', email).del();
+  const result = await db('login').where('email', email).del().returning('*');
+  return result[0];
 };
 
 const loginByEmail = async (email) => {
