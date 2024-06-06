@@ -6,9 +6,14 @@ const app = express();
 
 app.use(
   cors({
-    origin: 'https://smart-brain.imohamadnashaat.com/',
+    origin: [
+      'https://imohamadnashaat.com',
+      /\.imohamadnashaat\.com$/,
+      // ... more domains
+    ],
   })
 );
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
