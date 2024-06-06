@@ -1,4 +1,5 @@
 services:
+  # Database Service
   db:
     image: postgres:13
     restart: always
@@ -7,14 +8,20 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./data:/var/lib/postgresql/data/
+      - ./data/db:/var/lib/postgresql/data/
     ports:
       - 5432:5432
     env_file:
       - .env
+  # APP Service
   api:
     build: .
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25' # Limits CPU usage to 25%
+          memory: 250M # Limits memory usage to 250MB
     ports:
       - 3000:3000
     links:
