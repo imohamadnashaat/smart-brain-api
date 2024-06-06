@@ -4,7 +4,11 @@ import api from './routes/api.js';
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: 'https://smart-brain.imohamadnashaat.com/',
+  })
+);
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
